@@ -1,0 +1,8 @@
+1.6 - added BRMS and Fuse detection tasks
+    - added check for RPM based installations in the running versions check
+
+1.5 - added 4 build date columns - anaconda_log, machine_id, filesystem_create, and yum_history
+
+1.4 - added change time column 
+
+1.3 - fixed to work with Ansible 2.2.1

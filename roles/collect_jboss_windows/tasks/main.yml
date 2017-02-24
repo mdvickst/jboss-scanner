@@ -1,0 +1,12 @@
+
+---
+# This will scan linux systems for JBoss EAP or Wildfly Installations
+
+- name: grab info_win
+  scan-jboss-win:
+  register: facts_all
+
+- name: record host returned dictionary
+  set_fact: res={{facts_all}}
+  tags:
+    - default

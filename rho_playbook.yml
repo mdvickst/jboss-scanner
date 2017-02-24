@@ -1,0 +1,20 @@
+# This playbook consists of four plays. The first one pulls information about all the default rho facts and the second
+# writes them to a csv with the name specified. The third one pulls information about only those facts we intend to
+# collect_seap (as demonstrated in the example) and the fourth one writes them to a file as specified.
+
+---
+
+- name: Collect all default facts
+  hosts: all
+  gather_facts: False
+  roles:
+    - { role: collect_jboss_windows, when: win_enabled == 'True' }
+    - { role: collect_jboss_raw, when: win_enabled == 'False' }
+    - { role: collect_fuse_raw, when: win_enabled == 'False' }
+
+#- name: Write default facts first to a variable and then to csv locally
+#  hosts: localhost
+#  gather_facts: False
+#  roles:
+#    - { role: write_jboss_raw}
+

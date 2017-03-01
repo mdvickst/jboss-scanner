@@ -10,7 +10,7 @@
       register: runjar_ver
       ignore_errors: yes
     - name: Gather jboss versions currently running
-      raw: for proc_pid in $(find /proc -maxdepth 1 -name "[0-9]*"); do ls -l ${proc_pid}/fd 2>/dev/null | grep "java"; done | grep -e "/modules/system/layers/base\|/opt/rh/eap7" | sed -n "s/.*\->//p" | sed -n 's/\/modules\/system\/layers\/base.*//p;s/.*\(\/opt\/rh\/eap[1-9]\).*/\1/p' | sort -u
+      raw: for proc_pid in $(find /proc -maxdepth 1 -name "[0-9]*"); do ls -l ${proc_pid}/fd 2>/dev/null | grep "java"; done | grep -e "/modules/system/layers/base\|/opt/rh/eap" | sed -n "s/.*\->//p" | sed -n 's/\/modules\/system\/layers\/base.*//p;s/.*\(\/opt\/rh\/eap[1-9]\).*/\1/p' | sort -u
       register: running_versions
       ignore_errors: yes
     - name: Gather hostname

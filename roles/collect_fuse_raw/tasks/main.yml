@@ -1,25 +1,17 @@
 
 ---
 # This will scan linux systems for JBoss Fuse, ActiveMQ, CXF, Camel or Community  Installations
-    - name: Check for Enterprise activemq files and the version
-      raw: FOUND=""; for jar in `find / -type f -name \*activemq-\*redhat\*.jar 2>/dev/null | sed -n 's/.*\(redhat-[0-9]\{5\}\).*/\1/p' | sort -u`; do if [ ! -z "${jar}" ]; then if [ ! -z "$FOUND" ]; then FOUND="$FOUND; $jar"; else FOUND=${jar}; fi; fi; done; echo ${FOUND} 
+    - name: Gather activemq-ver
+      raw: FOUND=""; for jar in `find / -type f -name \*activemq-\*redhat\*.jar 2>/dev/null | sed -n 's/.*\(redhat-[0-9]\{6\}\).*/\1/p' | sort -u`; do if [ ! -z "${jar}" ]; then if [ ! -z "$FOUND" ]; then FOUND="$FOUND; $jar"; else FOUND=${jar}; fi; fi; done; echo ${FOUND}
       register: activemq-ver
       ignore_errors: yes
-    - name: Check for Enterprise Camel files and the version
-      raw: FOUND=""; for jar in `find / -type f -name \*camel-core\*redhat\*.jar 2>/dev/null | sed -n 's/.*\(redhat-[0-9]\{5\}\).*/\1/p' | sort -u`; do if [ ! -z "${jar}" ]; then if [ ! -z "$FOUND" ]; then FOUND="$FOUND; $jar"; else FOUND=${jar}; fi; fi; done; echo ${FOUND} 
-      register: camel_ver
+    - name: Gather camel-ver
+      raw: FOUND=""; for jar in `find / -type f -name \*camel-core\*redhat\*.jar 2>/dev/null | sed -n 's/.*\(redhat-[0-9]\{6\}\).*/\1/p' | sort -u`; do if [ ! -z "${jar}" ]; then if [ ! -z "$FOUND" ]; then FOUND="$FOUND; $jar"; else FOUND=${jar}; fi; fi; done; echo ${FOUND}
+      register: camel-ver
       ignore_errors: yes
-    - name: Check for Enterprise CXF files and the version
-      raw: FOUND=""; for jar in `find / -type f -name \*cxf-rt\*redhat\*.jar 2>/dev/null | sed -n 's/.*\(redhat-[0-9]\{5\}\).*/\1/p' | sort -u`; do if [ ! -z "${jar}" ]; then if [ ! -z "$FOUND" ]; then FOUND="$FOUND; $jar"; else FOUND=${jar}; fi; fi; done; echo ${FOUND} 
+    - name: Gather cxf-ver
+      raw: FOUND=""; for jar in `find / -type f -name \*cxf-rt\*redhat\*.jar 2>/dev/null | sed -n 's/.*\(redhat-[0-9]\{6\}\).*/\1/p' | sort -u`; do if [ ! -z "${jar}" ]; then if [ ! -z "$FOUND" ]; then FOUND="$FOUND; $jar"; else FOUND=${jar}; fi; fi; done; echo ${FOUND}
       register: cxf-ver
-      ignore_errors: yes
-    - name: Gather hostname
-      raw: hostname
-      register: hostname
-      ignore_errors: yes
-    - name: Gather cpu cores
-      raw:  CPU_CORES=$(grep cpu.cores /proc/cpuinfo | sed 's/cpu.*:.\?//g' | sort -u); if [ -z "$CPU_CORES" ]; then CPU_CORES=$(grep processor /proc/cpuinfo | wc -l); fi; echo "$CPU_CORES" | sed 's/\s*//g'
-      register: cpu_cores
       ignore_errors: yes
     #- name: set facts
     #  ignore_errors: yes

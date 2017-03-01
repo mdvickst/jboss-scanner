@@ -7,7 +7,7 @@ import re
 import os
 import csv
 
-classifications = {
+eap_classifications = {
     'JBoss_4_0_0': 'JBossAS-4',
     'JBoss_4_0_1_SP1': 'JBossAS-4',
     'JBoss_4_0_2': 'JBossAS-4',
@@ -65,6 +65,36 @@ classifications = {
     '1.4.4.Final-redhat-1': 'EAP-7.0',
     '1.5.1.Final-redhat-1': 'EAP-7.0'
 }
+
+brms_classifications = {
+    '6.4.0.Final-redhat-3': 'BRMS 6.3.0',
+    '6.3.0.Final-redhat-5': 'BRMS 6.2.0',
+    '6.2.0.Final-redhat-4': 'BRMS 6.1.0',
+    '6.0.3-redhat-6': 'BRMS 6.0.3',
+    '6.0.3-redhat-4': 'BRMS 6.0.2',
+    '6.0.2-redhat-6': 'BRMS 6.0.1',
+    '6.0.2-redhat-2': 'BRMS 6.0.0',
+    '5.3.1.BRMS': 'BRMS 5.3.1',
+    '5.3.0.BRMS': 'BRMS 5.3.0',
+    '5.2.0.BRMS': 'BRMS 5.2.0',
+    '5.1.0.BRMS': 'BRMS 5.1.0',
+    '5.0.2.BRMS': 'BRMS 5.0.2',
+    '5.0.1.BRMS': 'BRMS 5.0.1',
+    'drools-core-5.0.0': 'BRMS 5.0.0',
+    '6.5.0.Final': 'Drools 6.5.0'
+}
+
+fuse_classifications = {
+    'redhat-630187': 'Fuse-6.3.0',
+    'redhat-621084': 'Fuse-6.2.1',
+    'redhat-620133': 'Fuse-6.2.0',
+    'redhat-611412': 'Fuse-6.1.1',
+    'redhat-610379': 'Fuse-6.1.0',
+    'redhat-60024': 'Fuse-6.0.0',
+}
+
+columns = ['IP Address', 'hostname', 'cpu_cores', 'installed_versions', 'running_versions', 'deploy_dates', 'date.yum_history', 'date.filesystem_create', 'date.machine_id', 'date.anaconda_log', 'brms.kie-war-ver', 'brms.kie-api-ver', 'brms.drools-core-ver', 'cxf-ver', 'activemq-ver', 'camel-ver']
+
 
 def encrypt(filename, vault_pass):
     result = None
@@ -242,6 +272,20 @@ class AnsibleCore(object):
                 key = 'date.filesystem_create'
             elif 'Gather date.yum_history' in line:
                 key = 'date.yum_history'
+            elif 'Gather brms.kie-api-ver' in line:
+                key = 'brms.kie-api-ver'
+            elif 'Gather brms.drools-core-ver' in line:
+                key = 'brms.drools-core-ver'
+            elif 'Gather brms.kie-war-ver' in line:
+                key = 'brms.kie-war-ver'
+            elif 'Gather brms.business-central-war-ver' in line:
+                key = 'brms.business-central-war-ver'
+            elif 'Gather activemq-ver' in line:
+                key = 'activemq-ver'
+            elif 'Gather camel-ver' in line:
+                key = 'camel-ver'
+            elif 'Gather cxf-ver' in line:
+                key = 'cxf-ver'
             elif 'ok:' in line or 'changed:' in line or 'fatal:' in line:
                 match = re.search("[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}", line)
                 if match:
@@ -250,25 +294,58 @@ class AnsibleCore(object):
                         results[ip] = {}
                     match = re.search('(stdout":\s")(.*)(\\\\?r?\\\\?n?", "stdout_lines)', line)
                     if match:
-                        if key == 'installed_versions':
+                        if key == 'installed_versions' :
                             jboss_releases = []
                             deploy_dates = []
                             versions = match.group(2).replace('\\r\\n', '').split('; ')
                             for v in versions:
-                                if v is not '':
+                                if v is not '' and key == 'installed_versions':
                                     ver = v.replace('\\r\\n', '').split('**')[0]
                                     deploy_date = v.replace('\\r\\n', '').split('**')[1]
                                     deploy_dates.append(deploy_date)
-                                    if ver in classifications:
-                                        jboss_releases.append(classifications[ver])
+                                    if ver in eap_classifications:
+                                        jboss_releases.append(eap_classifications[ver])
                                     elif ver.strip() != '':
-                                        jboss_releases.append('Unknown-JBoss-Release: ' + ver)
+                                        jboss_releases.append('Unknown-Release: ' + ver)
+                                elif v is not '':
+                                    if v in brms_classifications:
+                                        jboss_releases.append(brms_classifications[v])
+                                    elif v.strip() != '':
+                                        jboss_releases.append('Unknown-Release: ' + v)
                             if key not in results[ip] or results[ip][key] == '':
                                 results[ip][key] = "; ".join(jboss_releases)
-                                results[ip]['deploy_dates'] = "; ".join(deploy_dates)
+                                if key == 'installed_versions':
+                                    results[ip]['deploy_dates'] = "; ".join(deploy_dates)
                             else:
                                 results[ip][key] += "; " + "; ".join(jboss_releases)
-                                results[ip]['deploy_dates'] += "; " + "; ".join(deploy_dates)
+                                if key == 'installed_versions':
+                                    results[ip]['deploy_dates'] += "; " + "; ".join(deploy_dates)
+                        elif key == 'brms.kie-api-ver' or key == 'brms.drools-core-ver' or key == 'brms.kie-war-ver':
+                            brms_releases = []
+                            versions = match.group(2).replace('\\r\\n', ';').split(';')
+                            for v in versions:
+                                if v is not '':
+                                    if v in brms_classifications:
+                                        brms_releases.append(brms_classifications[v])
+                                    elif v.strip() != '':
+                                        brms_releases.append('Unknown-Release: ' + v)
+                            if key not in results[ip] or results[ip][key] == '':
+                                results[ip][key] = "; ".join(brms_releases)
+                            else:
+                                results[ip][key] += "; " + "; ".join(brms_releases)
+                        elif key == 'activemq-ver' or key == 'camel-ver' or key == 'cxf-ver':
+                            fuse_releases = []
+                            versions = match.group(2).replace('\\r\\n', ';').split(';')
+                            for v in versions:
+                                if v is not '':
+                                    if v in fuse_classifications:
+                                        fuse_releases.append(fuse_classifications[v])
+                                    elif v.strip() != '':
+                                        fuse_releases.append('Unknown-Release: ' + v)
+                            if key not in results[ip] or results[ip][key] == '':
+                                results[ip][key] = "; ".join(fuse_releases)
+                            else:
+                                results[ip][key] += "; " + "; ".join(fuse_releases)
                         elif key == 'running_versions':
                             results[ip][key] = match.group(2).replace('\\r\\n', ';')
                         else:
@@ -279,18 +356,18 @@ class AnsibleCore(object):
         for ip in results.keys():
             writer = csv.writer(f, delimiter=',')
             if first_pass:
-                fields = results[ip].keys()
-                fields.append("IP Address")
-                writer.writerow(fields)
+                writer.writerow(columns)
                 first_pass = False
 
             values = []
-            for key in results[ip].keys():
-                if type(results[ip][key]) is str:
+
+            for key in columns:
+                if key == 'IP Address':
+                    values.append(str(ip))
+                elif type(results[ip][key]) is str:
                     values.append(results[ip][key].replace('\r\n', ''))
                 else:
                     values.append(results[ip][key])
-            values.append(str(ip))
             writer.writerow(values)
 
         f.close()

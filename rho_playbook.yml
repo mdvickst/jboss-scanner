@@ -10,6 +10,7 @@
   roles:
     - { role: collect_jboss_windows, when: win_enabled == 'True' }
     - { role: collect_jboss_raw, when: win_enabled == 'False' }
+    - { role: collect_brms_raw, when: win_enabled == 'False' }
     - { role: collect_fuse_raw, when: win_enabled == 'False' }
 
 #- name: Write default facts first to a variable and then to csv locally

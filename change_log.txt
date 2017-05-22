@@ -1,5 +1,11 @@
+1.6.1 - fixed ansible vault confirmation of password
+      - added checks in case encryption of inventory files fails the program removes unencrypted inventory files and quits
+      - fixed issue where results where one task failed were causing parsing of output to fail
+
 1.6 - added BRMS and Fuse detection tasks
     - added check for RPM based installations in the running versions check
+    - changed sort order for columns in report
+    - fixed a few bugs in the collect_fuse/brms/jboss tasks
 
 1.5 - added 4 build date columns - anaconda_log, machine_id, filesystem_create, and yum_history
 

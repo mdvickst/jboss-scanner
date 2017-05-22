@@ -103,14 +103,17 @@ def encrypt(filename, vault_pass):
         child = pexpect.spawn('ansible-vault encrypt ' + filename)
         result = child.expect('Vault password:')
         child.sendline(vault_pass)
-        result = child.expect(['Encryption successful', 'ERROR! input is already encrypted', pexpect.EOF])
+        result = child.expect(['Encryption successful', 'ERROR! input is already encrypted', pexpect.EOF, 'Confirm New Vault password:'])
+        if result == 3:
+            child.sendline(vault_pass)
+            result = child.expect(['Encryption successful', 'ERROR! input is already encrypted', pexpect.EOF])
         return result  # 0 or 2 means successful, 1 means already encrypted
     except pexpect.EOF:
-        print(str(result))
         print('pexpect unexpected EOF')
+        return -1
     except pexpect.TIMEOUT:
-        print(str(result))
         print('pexpect timed out')
+        return -1
 
 
 def run_ansible_with_vault(cmd_string, vault_pass, ssh_key_passphrase = None):
@@ -171,7 +174,11 @@ class AnsibleCore(object):
         f = open('/tmp/ping-inventory', 'w')
         f.write(inventory_string)
         f.close()
-        encrypt('/tmp/ping-inventory', encryption_password)
+        result = encrypt('/tmp/ping-inventory', encryption_password)
+        if result == -1:
+            os.remove('/tmp/ping-inventory')
+            print 'Error encrypting ping-inventory file, could not continue'
+        exit(1)
 
     def build_master_inventory(self, encryption_password, scan_type, win_enabled=False):
 
@@ -207,7 +214,11 @@ class AnsibleCore(object):
         f = open('/tmp/master-inventory', 'w')
         f.write(inventory_string)
         f.close()
-        encrypt('/tmp/master-inventory', encryption_password)
+        result = encrypt('/tmp/master-inventory', encryption_password)
+        if result == -1:
+            os.remove('/tmp/master-inventory')
+            print 'Error encrypting master-inventory file, could not continue'
+        exit(1)
 
     def run_ping_scan(self, auth, encryption_password, forks=50, scan_type='rhel', win_enabled=False):
         if not win_enabled or scan_type == 'rhel':
@@ -364,10 +375,12 @@ class AnsibleCore(object):
             for key in columns:
                 if key == 'IP Address':
                     values.append(str(ip))
-                elif type(results[ip][key]) is str:
-                    values.append(results[ip][key].replace('\r\n', ''))
+                elif key in results[ip]:
+                    if type(results[ip][key]) is str:
+                        values.append(results[ip][key].replace('\r\n', ''))
+                    else:
+                        values.append(results[ip][key])
                 else:
-                    values.append(results[ip][key])
-            writer.writerow(values)
+                    values.append('')
 
         f.close()

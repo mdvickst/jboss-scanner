@@ -178,7 +178,7 @@ class AnsibleCore(object):
         if result == -1:
             os.remove('/tmp/ping-inventory')
             print 'Error encrypting ping-inventory file, could not continue'
-        exit(1)
+            exit(1)
 
     def build_master_inventory(self, encryption_password, scan_type, win_enabled=False):
 
@@ -218,7 +218,7 @@ class AnsibleCore(object):
         if result == -1:
             os.remove('/tmp/master-inventory')
             print 'Error encrypting master-inventory file, could not continue'
-        exit(1)
+            exit(1)
 
     def run_ping_scan(self, auth, encryption_password, forks=50, scan_type='rhel', win_enabled=False):
         if not win_enabled or scan_type == 'rhel':
